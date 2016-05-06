@@ -16,6 +16,51 @@ getVariables(relation) = collect(keys(relation))
 #     return sol_dict
 # end
 
+
+function sortVIPDataperm(obj::VIPData)
+    n = length(data.var)
+    ref = Array{Int}(n)
+    for i in 1:n
+        ref[i] = data.lin_idx[data.var[i]]
+    end
+
+    return sortperm(ref)
+end
+
+function _path_preprocess_bounds(m)
+
+    # if there is lower and upper bounds declared by @variable,
+    # then add them using @NLconstraint.
+
+end
+
+function _path_solver(m)
+    _path_preprocess_bounds(m)
+
+    data = getVIPData(m)
+
+    # parameter/data preparation
+    const_lb, const_ub = JuMP.constraintbounds(m)
+
+    no_var = length(data.var)
+    no_const = length(constlb)
+    n = no_var + no_const
+
+    # adding dummy constraints F=0 to evaluate derivatives of F.
+    p = sortMCPDataperm(data)
+    @NLconstraint(m, dummy[i=1:n], data.relation[data.var[p[i]]] == 0)
+
+
+    # WELL.... computing the Jacobian will be pretty messy.
+
+
+    status, z, f = PATHSolver.solveMCP(myfunc, myjac, lb, ub)
+
+
+
+end
+
+
 function _fixed_point(m, step_size, tolerance, max_iter)
     relation = getVIPData(m).relation
 

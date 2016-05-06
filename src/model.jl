@@ -3,11 +3,12 @@ type VIPData
     F::Array{JuMP.NonlinearExpression,1}
     var::Array{JuMP.Variable,1}
     relation::Dict{JuMP.Variable, JuMP.NonlinearExpression}
+    lin_idx::Dict{JuMP.Variable, Int}
 end
 
 function VIPModel(solver=Ipopt.IpoptSolver(print_level=0))
     m = Model(solver=solver)
-    m.ext[:VIP] = VIPData(Array(JuMP.NonlinearExpression,0), Array(JuMP.Variable,0), Dict{JuMP.Variable, JuMP.NonlinearExpression}() )
+    m.ext[:VIP] = VIPData(Array(JuMP.NonlinearExpression,0), Array(JuMP.Variable,0), Dict{JuMP.Variable, JuMP.NonlinearExpression}(), Dict{JuMP.Variable, Int}() )
     return m
 end
 
@@ -22,6 +23,7 @@ end
 function correspond(m::Model, expression::JuMP.NonlinearExpression, variable::JuMP.Variable)
     data = getVIPData(m)
     data.relation[variable] = expression
+    data.lin_idx[variable] = linearindex(variable)
 end
 
 function correspond(m::Model, expressions::Array{JuMP.NonlinearExpression,1}, variables::Array{JuMP.Variable,1})
